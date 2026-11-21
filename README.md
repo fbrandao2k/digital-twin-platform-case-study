@@ -155,7 +155,7 @@ Inspection reports and damage data belong to bridge owners and must not leak bet
 - **The rules are the boundary, not the interface.** Two app roles, Administrator and Viewer, are stored in each user's profile and enforced by Firestore and Storage security rules. Hiding a button is never the only protection.
 - **Least privilege per bridge.** Report access and damage access are granted separately for each bridge, and neither allows uploads or edits.
 - **Rules are tested.** Every pull request runs the security rules against local emulators with synthetic users, so a permissions regression fails CI before it reaches any environment.
-- **No long-lived keys for Google APIs.** The Sheets functions impersonate a dedicated service account with short-lived tokens, and they check that the account belongs to the same project before asking for credentials.
+- **No long-lived keys for Google APIs.** The Sheets functions impersonate a dedicated service account with short-lived tokens, a different one in each environment, and they check that the account belongs to the same project before asking for credentials.
 - **Controlled AI costs and data exposure.** The map assistant's Claude fallback runs only for authenticated users, sends the provider only the question and bridge names, uses a fixed model allowlist and strict limits (for example 20 requests per user per day), and counts requests atomically in Firestore. The viewer agent uses each user's own key, kept in their browser and never sent to the platform's servers.
 - **Narrow local integrations.** The MCP server listens only on the loopback interface, accepts an exact list of origins and hosts, and pairs with one map tab through a random code.
 - **Safe data operations.** The scripts that copy bridge data from production to development show a preview by default and never copy accounts or roles.
@@ -182,7 +182,6 @@ Inspection reports and damage data belong to bridge owners and must not leak bet
 - **Live sensors in production.** Finish the AWS deployment and its end-to-end check, merge the live-ingestion work, then connect real instruments in place of the simulator.
 - **BCF.** Turn the to-dos, which already link an element to a problem, into BCF issues with the camera position and a picture of the damage, for exchange with other BIM tools.
 - **Browser tests.** End-to-end tests with Playwright on an isolated emulator project: loading a real IFC, restoring a to-do highlight, switching projects without stale state.
-- **Sheets in development.** A separate service account and synthetic spreadsheets for the development environment.
 
 ## Credits
 
