@@ -102,7 +102,7 @@ A Google Sheet can drive the model: each row maps an IFC category to an action (
 
 The **IoT/Sensors** tab places editable accelerometer, LVDT and other sensor markers on the model and opens a signal chart beside each one. Each sensor takes its data from one of two sources: synthetic signals, which the panel labels as such, or a live MQTT feed.
 
-Live ingestion is implemented in a pull request that is still under review:
+Live ingestion was merged into the main branch in November 2026:
 
 - The browser subscribes to one topic per sensor over MQTT on secure WebSockets. It checks every message against a versioned contract (the unit for each sensor type, a sensor ID that matches the topic, timestamps, a size limit) and drops duplicates.
 - Each card and marker shows the sensor's state: live, stale (judged by the reading's own timestamp), reconnecting, offline or not authorized. Reconnection backs off with jitter and pauses while the browser is offline.
@@ -144,7 +144,7 @@ flowchart LR
     Agent --> Functions
     Functions -->|"quota-bound calls"| Claude["Claude API"]
     Globe --> Ion["Cesium ion"]
-    Viewer -.->|"MQTT over WSS, under review"| IoT["AWS IoT Core<br/>live sensor readings"]
+    Viewer -.->|"MQTT over WSS, AWS deploy in progress"| IoT["AWS IoT Core<br/>live sensor readings"]
 ```
 
 More diagrams (viewer composition, access control, the keyless Sheets flow and the release pipeline) are in [docs/architecture.md](docs/architecture.md).
@@ -182,7 +182,7 @@ Inspection reports and damage data belong to bridge owners and must not leak bet
 
 ## Roadmap
 
-- **Live sensors in production.** Finish the AWS deployment and its end-to-end check, merge the live-ingestion work, then connect real instruments in place of the simulator.
+- **Live sensors in production.** Finish the AWS deployment and its end-to-end check, then connect real instruments in place of the simulator.
 - **BCF.** Turn the to-dos, which already link an element to a problem, into BCF issues with the camera position and a picture of the damage, for exchange with other BIM tools.
 - **Browser tests.** End-to-end tests with Playwright on an isolated emulator project: loading a real IFC, restoring a to-do highlight, switching projects without stale state.
 

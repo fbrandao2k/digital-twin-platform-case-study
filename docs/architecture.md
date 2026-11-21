@@ -31,10 +31,10 @@ flowchart LR
     Agent --> Functions
     Functions -->|"quota-bound calls"| Claude["Claude API"]
     Globe --> Ion["Cesium ion"]
-    Viewer -.->|"MQTT over WSS, under review"| IoT["AWS IoT Core<br/>live sensor readings"]
+    Viewer -.->|"MQTT over WSS, AWS deploy in progress"| IoT["AWS IoT Core<br/>live sensor readings"]
 ```
 
-The browser talks to Firebase directly. Firestore and Storage requests are checked by the security rules, so the rules, not the interface, decide what each user can read or write. Cloud Functions handle the work that needs server-side identity: calling Google APIs, and the Claude calls of both the map assistant and the viewer's AI agent, so no provider key reaches the browser. The agent's tools still run in the browser, because they act on the live viewer. The dashed link is the live-sensor feed, still under review: the viewer subscribes to AWS IoT Core with the user's Firebase ID token, and the broker grants subscribe-only access.
+The browser talks to Firebase directly. Firestore and Storage requests are checked by the security rules, so the rules, not the interface, decide what each user can read or write. Cloud Functions handle the work that needs server-side identity: calling Google APIs, and the Claude calls of both the map assistant and the viewer's AI agent, so no provider key reaches the browser. The agent's tools still run in the browser, because they act on the live viewer. The dashed link is the live-sensor feed, merged and tested with a local broker while its AWS deployment is in progress: the viewer subscribes to AWS IoT Core with the user's Firebase ID token, and the broker grants subscribe-only access.
 
 ## Viewer composition
 
