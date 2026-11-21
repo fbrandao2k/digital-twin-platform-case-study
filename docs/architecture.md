@@ -10,14 +10,14 @@ flowchart LR
         Pages["Pages<br/>Projects · Users · Map · Viewer"]
         Viewer["BIM viewer<br/>That Open Engine · web-ifc · Three.js"]
         Globe["Globe<br/>CesiumJS · 3D Tiles"]
-        Agent["AI agent panel<br/>user's own key"]
+        Agent["AI agent panel<br/>tools run in the browser"]
     end
 
     subgraph Firebase["Firebase (separate dev and production projects)"]
         Auth["Authentication<br/>Google · email"]
         Firestore[("Cloud Firestore<br/>users · projects · access grants")]
         Storage[("Cloud Storage<br/>IFC · FEM · damage · reports")]
-        Functions["Cloud Functions<br/>Sheets · map assistant"]
+        Functions["Cloud Functions<br/>Sheets · map assistant · agent proxy"]
         Rules{{"Security rules<br/>roles and per-bridge grants"}}
     end
 
@@ -28,13 +28,13 @@ flowchart LR
     Storage -.-> Rules
     Pages --> Functions
     Functions -->|"short-lived token"| Sheets["Google Sheets and Drive"]
-    Functions -->|"quota-bound fallback"| Claude["Claude API"]
-    Agent --> Claude
+    Agent --> Functions
+    Functions -->|"quota-bound calls"| Claude["Claude API"]
     Globe --> Ion["Cesium ion"]
     Viewer -.->|"MQTT over WSS, under review"| IoT["AWS IoT Core<br/>live sensor readings"]
 ```
 
-The browser talks to Firebase directly. Firestore and Storage requests are checked by the security rules, so the rules, not the interface, decide what each user can read or write. Cloud Functions handle the work that needs server-side identity: calling Google APIs and the optional Claude fallback of the map assistant. The viewer's AI agent calls Claude straight from the browser with the user's own key. The dashed link is the live-sensor feed, still under review: the viewer subscribes to AWS IoT Core with the user's Firebase ID token, and the broker grants subscribe-only access.
+The browser talks to Firebase directly. Firestore and Storage requests are checked by the security rules, so the rules, not the interface, decide what each user can read or write. Cloud Functions handle the work that needs server-side identity: calling Google APIs, and the Claude calls of both the map assistant and the viewer's AI agent, so no provider key reaches the browser. The agent's tools still run in the browser, because they act on the live viewer. The dashed link is the live-sensor feed, still under review: the viewer subscribes to AWS IoT Core with the user's Firebase ID token, and the broker grants subscribe-only access.
 
 ## Viewer composition
 

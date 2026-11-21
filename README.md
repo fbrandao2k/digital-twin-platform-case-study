@@ -85,7 +85,9 @@ Administrators grant registered Viewers access to one bridge's inspection report
 
 ![AI agent panel after "take me to the most critical crack": the tool calls, the crack's measurements and the crack selected in the viewer](img/ai-agent.jpg)
 
-An optional agent panel uses Claude with tool use. Its 11 tools let it read the project overview, list and select finite-element members, list and highlight IFC categories, show or hide models, read inspection-report PDFs, and load and select measured cracks. Asked to "take me to the most critical crack", it loads the bridge's damage models, ranks the cracks by maximum recorded width and selects the worst one in the viewer. Asked to "take me to the cable with the highest tension", it finds that cable in the CSiBridge results and highlights it. Each user brings their own API key: it is stored only in their browser and sent straight to Anthropic, never to the platform's servers.
+An optional agent panel uses Claude with tool use. Its 11 tools let it read the project overview, list and select finite-element members, list and highlight IFC categories, show or hide models, read inspection-report PDFs, and load and select measured cracks. Asked to "take me to the most critical crack", it loads the bridge's damage models, ranks the cracks by maximum recorded width and selects the worst one in the viewer. Asked to "take me to the cable with the highest tension", it finds that cable in the CSiBridge results and highlights it.
+
+The tools run in the browser, because they act on the live viewer, and every read they make goes through the security rules. The model calls go through an authenticated Cloud Function, so the browser never holds an Anthropic key. On every round the function adds the system prompt and the fixed tool catalog, rechecks the user's report and damage grants for that bridge, and charges per-user and per-project quotas. It also writes an audit log entry without the question or the answer.
 
 ### Google Sheets
 
@@ -121,14 +123,14 @@ flowchart LR
         Pages["Pages<br/>Projects · Users · Map · Viewer"]
         Viewer["BIM viewer<br/>That Open Engine · web-ifc · Three.js"]
         Globe["Globe<br/>CesiumJS · 3D Tiles"]
-        Agent["AI agent panel<br/>user's own key"]
+        Agent["AI agent panel<br/>tools run in the browser"]
     end
 
     subgraph Firebase["Firebase (separate dev and production projects)"]
         Auth["Authentication<br/>Google · email"]
         Firestore[("Cloud Firestore<br/>users · projects · access grants")]
         Storage[("Cloud Storage<br/>IFC · FEM · damage · reports")]
-        Functions["Cloud Functions<br/>Sheets · map assistant"]
+        Functions["Cloud Functions<br/>Sheets · map assistant · agent proxy"]
         Rules{{"Security rules<br/>roles and per-bridge grants"}}
     end
 
@@ -139,8 +141,8 @@ flowchart LR
     Storage -.-> Rules
     Pages --> Functions
     Functions -->|"short-lived token"| Sheets["Google Sheets and Drive"]
-    Functions -->|"quota-bound fallback"| Claude["Claude API"]
-    Agent --> Claude
+    Agent --> Functions
+    Functions -->|"quota-bound calls"| Claude["Claude API"]
     Globe --> Ion["Cesium ion"]
     Viewer -.->|"MQTT over WSS, under review"| IoT["AWS IoT Core<br/>live sensor readings"]
 ```
@@ -156,7 +158,7 @@ Inspection reports and damage data belong to bridge owners and must not leak bet
 - **Least privilege per bridge.** Report access and damage access are granted separately for each bridge, and neither allows uploads or edits.
 - **Rules are tested.** Every pull request runs the security rules against local emulators with synthetic users, so a permissions regression fails CI before it reaches any environment.
 - **No long-lived keys for Google APIs.** The Sheets functions impersonate a dedicated service account with short-lived tokens, a different one in each environment, and they check that the account belongs to the same project before asking for credentials.
-- **Controlled AI costs and data exposure.** The map assistant's Claude fallback runs only for authenticated users, sends the provider only the question and bridge names, uses a fixed model allowlist and strict limits (for example 20 requests per user per day), and counts requests atomically in Firestore. The viewer agent uses each user's own key, kept in their browser and never sent to the platform's servers.
+- **Controlled AI costs and data exposure.** Both Claude features call the model only from Cloud Functions, for signed-in users. The provider key stays in Secret Manager, never in the browser. Each function has a fixed model allowlist and per-user and per-project limits, counted atomically in Firestore. The map assistant sends the provider only the question and bridge names. The viewer agent's function rechecks the user's per-bridge grants on every round and logs each request without its content.
 - **Narrow local integrations.** The MCP server listens only on the loopback interface, accepts an exact list of origins and hosts, and pairs with one map tab through a random code.
 - **Safe data operations.** The scripts that copy bridge data from production to development show a preview by default and never copy accounts or roles.
 
@@ -175,6 +177,7 @@ Inspection reports and damage data belong to bridge owners and must not leak bet
 | One solver-independent modal file | Converting ANSYS and CSi results into `modal-model.json` keeps the viewer independent of the analysis software. |
 | Explicit asset manifests | Each bridge lists its own files, so the viewer never searches folders or shows one bridge's data on another. |
 | Free rule-based path before any model call | Common map requests cost nothing and work without an API key; the language model is an optional, capped fallback. |
+| A server-side proxy for the viewer agent | The browser never holds a provider key, and the server enforces quotas, per-bridge grants and an audit log. The agent's tools stay in the browser because they act on the live viewer. |
 | Keyless service-account access | Short-lived impersonated tokens replace downloaded JSON keys, so there is no long-lived secret to leak or rotate. |
 
 ## Roadmap

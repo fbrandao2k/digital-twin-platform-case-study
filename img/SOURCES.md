@@ -16,6 +16,6 @@ Every image here is a frame or clip from the demo recordings of November 2026 (`
 | `sensors.jpg` | `12-IoT_Sensors.mp4` | 0:26 |
 | `ai-agent.jpg` | `14-AI-Agents_DamageAssessment.mp4` | 1:05 |
 
-`ai-agent.jpg` has the "Key saved in this browser" line blurred, because it shows the last characters of the API key.
+`ai-agent.jpg` has the "Key saved in this browser" line blurred, because it shows the last characters of the API key. The recording predates November 2026, when the agent still used each user's own key; it now calls Claude through a server-side function.
 
 Before adding an image, check that it shows none of these: project IDs, console or address-bar URLs, emails or names of real users, pages of inspection reports, API keys or their hints, or bridge details an owner has not agreed to publish.
