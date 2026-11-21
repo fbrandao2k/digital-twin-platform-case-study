@@ -109,7 +109,7 @@ Live ingestion was merged into the main branch in November 2026:
 - A dam demo adds piezometer, inclinometer and reservoir-level sensors, fed by a device simulator.
 - On AWS IoT Core, a custom authorizer checks the user's Firebase ID token and grants subscribe-only access. Devices connect with X.509 certificates and may publish only to their own site's topics. Readings are stored in DynamoDB and expire after 30 days.
 
-It has been tested end to end in the app with a local broker; the AWS deployment is in progress.
+It is verified end to end on AWS IoT Core in the development environment: the simulator publishes over mutual TLS, an IoT rule stores the readings in DynamoDB, and the viewer, signed in with Firebase, shows the sensors as live. It is not yet connected to real instruments.
 
 ### Projects, tasks and users
 
@@ -144,7 +144,7 @@ flowchart LR
     Agent --> Functions
     Functions -->|"quota-bound calls"| Claude["Claude API"]
     Globe --> Ion["Cesium ion"]
-    Viewer -.->|"MQTT over WSS, AWS deploy in progress"| IoT["AWS IoT Core<br/>live sensor readings"]
+    Viewer -->|"MQTT over WSS"| IoT["AWS IoT Core<br/>live sensor readings"]
 ```
 
 More diagrams (viewer composition, access control, the keyless Sheets flow and the release pipeline) are in [docs/architecture.md](docs/architecture.md).
@@ -182,7 +182,7 @@ Inspection reports and damage data belong to bridge owners and must not leak bet
 
 ## Roadmap
 
-- **Live sensors in production.** Finish the AWS deployment and its end-to-end check, then connect real instruments in place of the simulator.
+- **Real instruments.** Feed the live sensor view from the lab's instruments instead of the device simulator.
 - **BCF.** Turn the to-dos, which already link an element to a problem, into BCF issues with the camera position and a picture of the damage, for exchange with other BIM tools.
 - **Browser tests.** End-to-end tests with Playwright on an isolated emulator project: loading a real IFC, restoring a to-do highlight, switching projects without stale state.
 
